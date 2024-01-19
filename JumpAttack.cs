@@ -6,7 +6,7 @@ public class JumpAttack : MonoBehaviour
 {
     public Collider2D jumpColl;
     Vector2 rightJumpOffset;
-    public float damage = 2;
+    public float damage = 50;
     
     private void Start(){
         rightJumpOffset = transform.localPosition;
@@ -32,6 +32,13 @@ public class JumpAttack : MonoBehaviour
             
             if(enemy != null) {
                 enemy.Health-=damage;
+            }
+        }
+        if(other.tag == "Cobra"){
+            CobraScript e2 = other.GetComponent<CobraScript>();
+            
+            if(e2 != null) {
+                e2.Health-=damage;
             }
         }
     }

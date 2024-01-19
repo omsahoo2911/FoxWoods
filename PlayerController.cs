@@ -5,7 +5,7 @@ using UnityEngine.InputSystem;
 
 public class PlayerController : MonoBehaviour
 {
-    public float moveSpeed = 1f;
+    public float moveSpeed = 700f;
     public float collisionOffset = 0.05f;
     public ContactFilter2D movementFilter;
     public JumpAttack jumpAttack;
@@ -15,69 +15,59 @@ public class PlayerController : MonoBehaviour
     Animator anim;
     List<RaycastHit2D> castCollisions = new List<RaycastHit2D>();
     bool canMove = true;
+    private Transform target;
+
     public AudioSource jumpSE;
     public AudioSource walkSE;
 
-    // Start is called before the first frame update
+    public Vector2 PlayerInput;
+    public int maxHealth = 100;
+    int currentHealth;
+
+    private bool isMoving = false;
+
+    public bool IsMoving {
+        set{
+            isMoving = value;
+            anim.SetBool("isMoving", value);
+        }
+    }
+
+
     void Start()
     {
         rb = GetComponent<Rigidbody2D>();
         anim = GetComponent<Animator>();
         sprite = GetComponent<SpriteRenderer>();
+        currentHealth = maxHealth;
+        target = GameObject.FindWithTag("Player").transform;
     }
 
-    // Update is called once per frame
+
     private void FixedUpdate() { 
-        if(canMove){
-            if(movementInput != Vector2.zero){
-            bool success = TryMove(movementInput);
-
-            if (!success) {
-                success = TryMove(new Vector2(movementInput.x,0));
-            }
-
-            if (!success) {
-                success = TryMove(new Vector2(0,movementInput.y));
-            }
-            anim.SetBool("isMoving", success);
-            } else {
-                anim.SetBool("isMoving",false);
-            }
-
+        if(canMove && PlayerInput != Vector2.zero){
+             
+            rb.velocity = PlayerInput * moveSpeed;
+            IsMoving = true;
             setDirection();
 
+        } else {
+            rb.velocity = Vector2.zero;
+            IsMoving = false;
         }
     }
 
-    private bool TryMove(Vector2 direction){
-        if(direction != Vector2.zero){
-            int count = rb.Cast(
-                direction,
-                movementFilter,
-                castCollisions,
-                moveSpeed * Time.fixedDeltaTime + collisionOffset);
-            
-            if(count==0){
-                rb.MovePosition(rb.position + direction * moveSpeed * Time.fixedDeltaTime);
-                return true;
-            } else {
-                return false;
-            }
-        } else {
-            return false;
-        }
-    }
 
     void setDirection(){
-        if(movementInput.x<0) {
-            sprite.flipX = true;
-        } else if (movementInput.x>0) {
-            sprite.flipX = false;
+        if(PlayerInput.x>0) {
+            transform.localScale = new Vector3(1f,1f,1f);
+        } else if (PlayerInput.x<0) {
+            transform.localScale = new Vector3(-1f,1f,1f);
         }
     }
-
+    
     void OnMove(InputValue movementValue){
-        movementInput = movementValue.Get<Vector2>();
+        PlayerInput = movementValue.Get<Vector2>();
     }
 
     void OnFire(){
@@ -95,6 +85,24 @@ public class PlayerController : MonoBehaviour
         } else {
             jumpAttack.JumpRight();
         }
+    }
+
+    public void TakeDamage(int damage)
+    {
+        currentHealth-=damage;
+
+        if(currentHealth <= 0)
+        {
+            anim.SetTrigger("isDead");
+            Die();
+        } else {
+            anim.SetTrigger("tookDamage");
+        }
+    }
+
+    void Die()
+    {
+        anim.SetTrigger("isDead");
     }
 
     public void EndAttack(){
