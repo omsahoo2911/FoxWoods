@@ -96,7 +96,7 @@ private Animator anim;
         if(movement.x>0) {
             transform.localScale = new Vector3(scaleX,scaleY,1f);
         } else if (movement.x<0) {
-            transform.localScale = new Vector3(-scaleX,scaleY,1f);
+            transform.localScale = new Vector3(-scaleX,scaleY,1f); 
         }
     }
 
